@@ -1,0 +1,96 @@
+import os
+import pandas as pd
+import argparse
+import time
+import torch
+
+from prepare_data import prepare_train_test_data, prepare_add_data
+from train_classic_ml import train_catboost, train_lgb
+from train_dmpnn import pretrain_dmpnn, fit_predict_dmpnn
+
+def main():
+    start_time = time.time()
+    print("Starting...")
+    print(
+        "GPU is available:",
+        torch.cuda.is_available(),
+        ", Quantity: ",
+        torch.cuda.device_count(),
+    )
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--train_path",
+        default="./data/sibur_element_119_final_train_data80.csv",
+        type=str,
+        help="Path to train csv-file",
+    )
+    parser.add_argument(
+        "--test_path",
+        default="./data/sibur_element_119_final_test_data80.csv",
+        type=str,
+        help="Path to test csv-file",
+    )
+    parser.add_argument(
+        "--add_data_path",
+        default="./data/alogps_3_01_training_.csv",
+        type=str,
+        help="Path to additional data csv-file",
+    )
+    parser.add_argument(
+        "--alogps_path",
+        default="./data/",
+        type=str,
+        help="Path to directory with ALOGPS descriptors files",
+    )
+    args = parser.parse_args(sys.argv[1:])
+    
+    train_path = args.train_path
+    test_path = args.test_path
+    add_data_path = args.add_data_path
+    alogps_path = args.alogps_path
+    # Prepare data
+    (train_data_deduplicated_wo_outliers,
+    train_mordred_rdkit_fps_mold2_deduplicated_wo_outliers,
+    test_data,
+    test_mordred_rdkit_fps_mold2,
+    mordred_cols, rdkit_desc_props_cols, morgan_fp_cols, maccs_fp_cols, rdkit_fp_cols, mold2_cols) = prepare_train_test_data(train_path, test_path)
+
+    Y_train = train_data_deduplicated_wo_outliers['LogP']
+    # Add ALOGPS descriptors
+    train_alogps = pd.read_table(os.path.join(alogps_path, "train_alogps.txt"))
+    train_alogps = train_alogps.reset_index().rename(columns={"index": "SMILES", "smiles": "LogP", "logP": "LogS", "logS": "skip"})[["SMILES", "LogP", "LogS"]]
+    X_tr = train_mordred_rdkit_fps_mold2_deduplicated_wo_outliers[np.concatenate((mordred_cols, rdkit_desc_props_cols, morgan_fp_cols, maccs_fp_cols))]
+    X_tr["LogP_alogps"] = train_alogps["LogP"]
+    X_tr["LogS_alogps"] = train_alogps["LogS"]
+    test_alogps = pd.read_table(os.path.join(alogps_path, "test_alogps.txt"))
+    test_alogps = test_alogps.reset_index().rename(columns={"index": "SMILES", "smiles": "LogP", "logP": "LogS", "logS": "skip"})[["SMILES", "LogP", "LogS"]]
+    X_test = test_mordred_rdkit_fps_mold2[np.concatenate((mordred_cols, rdkit_desc_props_cols, morgan_fp_cols, maccs_fp_cols))]
+    X_test["LogP_alogps"] = test_alogps["LogP"]
+    X_test["LogS_alogps"] = test_alogps["LogS"]
+
+    # Train catboost model
+    model1 = train_catboost(X_tr,
+                           Y_train,
+                           kwargs={'iterations': 1924, 'learning_rate': 0.05, 'per_float_feature_quantization': ['3855:border_count=1024']
+                                   })
+    # Make catboost_predictions
+    cb_predictions = model1.predict(X_test)
+    submission_cb = test_data.drop(columns=['SMILES'])
+    submission_cb['LogP'] = cb_predictions
+    submission_cb.to_csv("submission_cb.csv", index=False)
+    # Prepare additional data
+    prepare_add_data(add_data_path, test_data)
+
+    # Pretain D-MPNN model on add data
+    pretrain_dmpnn()
+
+    # Fine-tune ensemble of D-MPNN models and make predictions on test set
+    dmpnn_predictions = fit_predict_dmpnn()
+    submission_dmpnn = test_data.drop(columns=['SMILES'])
+    submission_dmpnn['LogP'] = np.array(dmpnn_predictions).mean(axis=0)
+    submission_dmpnn.to_csv("submission_dmpnn.csv", index=False)
+    # Final predictions
+    submission_dmpnn['LogP'] = (submission_dmpnn['LogP'] + submission_cb['LogP']) / 2
+    submission_dmpnn.to_csv("submission_cb+dmpnn.csv", index=False)
+    print("--- %s total seconds elapsed ---" % (time.time() - start_time))
