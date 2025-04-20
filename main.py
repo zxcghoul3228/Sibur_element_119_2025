@@ -81,7 +81,7 @@ def main():
     print("Finish CatBoost training")
     print("Start LightGBM training")
     model2 = train_lgb(X_tr,
-                           Y_train
+                       Y_train
                        )
     print("Finish LightGBM training")
     # Make catboost_predictions

@@ -50,7 +50,7 @@ def train_lgb(X_train, y_train, X_val=None, y_val=None, plot=False, kwargs={}):
         'num_threads': 32,
         'verbosity': 2,
         'metrics': 'rmse',
-        'num_boost_round': 454
+        'num_boost_round': 554
     }
     if kwargs:
         params.update(kwargs)
