@@ -58,9 +58,11 @@ def prepare_train_test_data(train_path: str, test_path: str):
     train_mols = [smile_mol(m) for m in train_smiles_list]
     test_mols = [smile_mol(m) for m in test_smiles_list]
     # Standardize smiles
+    print("Standardize molecules...")
     standardize(train_mols)
     standardize(test_mols)
     # Convert to rdkit.Mol
+    print("Convert to rdkit.Mol...")
     train_rdkit_mols = [MolFromSmiles(str(m)) for m in train_mols]
     test_rdkit_mols = [MolFromSmiles(str(m)) for m in test_mols]
     train_data['molecule'] = train_rdkit_mols
@@ -79,14 +81,19 @@ def prepare_train_test_data(train_path: str, test_path: str):
     train_dupl_rdkit_mols = train_data_duplicates.molecule.to_list()
     Y_train = train_data_wo_duplicates['LogP']
     # Calculate all descriptors
+    print("Calculate all descriptors for train set...")
     train_mordred_rdkit_fps_mold2, cols2drop, mordred_cols, rdkit_desc_props_cols, morgan_fp_cols, maccs_fp_cols, rdkit_fp_cols, mold2_cols = calculate_descriptors(train_rdkit_mols)
+    print("Calculate all descriptors for test set...")
     test_mordred_rdkit_fps_mold2, *_ = calculate_descriptors(test_rdkit_mols, cols2drop=cols2drop)
+    print("Calculate all descriptors for duplicates...")
     train_dupl_mordred_rdkit_fps_mold2, *_ = calculate_descriptors(train_dupl_rdkit_mols, cols2drop=cols2drop)
     # Train model to fix duplicates
+    print("Train model to fix duplicates...")
     model = train_catboost(train_mordred_rdkit_fps_mold2[np.concatenate((mordred_cols, rdkit_desc_props_cols, morgan_fp_cols, maccs_fp_cols, rdkit_fp_cols))],
                            Y_train,
                            kwargs={'iterations': 2172, 'learning_rate': 0.027336, 'verbose': 0})
     # Choose target value nearest to model prediction
+    print("Remove duplicates and outliers...")
     preds_duplicates = model.predict(train_dupl_mordred_rdkit_fps_mold2[np.concatenate((mordred_cols, rdkit_desc_props_cols, morgan_fp_cols, maccs_fp_cols, rdkit_fp_cols))])
     train_data_duplicates['LogP_pred'] = preds_duplicates
     train_data_duplicates['MAE'] = np.abs(train_data_duplicates['LogP'] - train_data_duplicates["LogP_pred"])

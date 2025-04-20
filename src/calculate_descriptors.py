@@ -103,6 +103,7 @@ def calculate_descriptors(mols: list,
                           # rdkit_fps=False,
                           ):
     '''Calculate all descriptors.'''
+    print("Calculate mordred descriptors")
     df_train, cols2drop = calculate_mordred_descriptors(mols, cols2drop=cols2drop)
     train_rdkit_descriptors = calculate_rdkit_descriptors(mols)
     train_rdkit_properties = calculate_rdkit_properties(mols)
@@ -129,7 +130,7 @@ def calculate_descriptors(mols: list,
     morgan_fp_cols = train_morgan_fps.columns
     maccs_fp_cols = train_maccs_fps.columns
     rdkit_fp_cols = train_rdkit_fps.columns
-    
+    print("Calculate mold2 descriptors")
     train_mold2 = calculate_mold2_descriptors(mols)
     train_mordred_rdkit_fps_mold2 = pd.concat((train_mordred_rdkit_fps, train_mold2), axis=1)
     mold2_cols = train_mold2.columns

@@ -52,6 +52,7 @@ def main():
     add_data_path = args.add_data_path
     alogps_path = args.alogps_path
     # Prepare data
+    print("Start data preparing")
     (train_data_deduplicated_wo_outliers,
     train_mordred_rdkit_fps_mold2_deduplicated_wo_outliers,
     test_data,
@@ -70,24 +71,29 @@ def main():
     X_test = test_mordred_rdkit_fps_mold2[np.concatenate((mordred_cols, rdkit_desc_props_cols, morgan_fp_cols, maccs_fp_cols))]
     X_test["LogP_alogps"] = test_alogps["LogP"]
     X_test["LogS_alogps"] = test_alogps["LogS"]
-
+    print("Finish data preparing")
     # Train catboost model
+    print("Start CatBoost training")
     model1 = train_catboost(X_tr,
                            Y_train,
-                           kwargs={'iterations': 1924, 'learning_rate': 0.05, 'per_float_feature_quantization': ['3855:border_count=1024']
+                           kwargs={'iterations': 1924, 'learning_rate': 0.05, 'per_float_feature_quantization': ['3855:border_count=1024'], 'verbose': 0
                                    })
+    print("Finish CatBoost training")
     # Make catboost_predictions
     cb_predictions = model1.predict(X_test)
     submission_cb = test_data.drop(columns=['SMILES'])
     submission_cb['LogP'] = cb_predictions
     submission_cb.to_csv("submission_cb.csv", index=False)
     # Prepare additional data
+    print("Prepare additional data")
     prepare_add_data(add_data_path, test_data)
 
     # Pretain D-MPNN model on add data
+    print("Start pretraining D-MPNN")
     pretrain_dmpnn()
 
     # Fine-tune ensemble of D-MPNN models and make predictions on test set
+    print("Start fine-tuning D-MPNN")
     dmpnn_predictions = fit_predict_dmpnn()
     submission_dmpnn = test_data.drop(columns=['SMILES'])
     submission_dmpnn['LogP'] = np.array(dmpnn_predictions).mean(axis=0)
