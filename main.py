@@ -94,3 +94,7 @@ def main():
     submission_dmpnn['LogP'] = (submission_dmpnn['LogP'] + submission_cb['LogP']) / 2
     submission_dmpnn.to_csv("submission_cb+dmpnn.csv", index=False)
     print("--- %s total seconds elapsed ---" % (time.time() - start_time))
+
+    
+if __name__ == "__main__":
+    main()
