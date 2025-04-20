@@ -79,11 +79,24 @@ def main():
                            kwargs={'iterations': 1924, 'learning_rate': 0.05, 'per_float_feature_quantization': ['3855:border_count=1024'], 'verbose': 0
                                    })
     print("Finish CatBoost training")
+    print("Start LightGBM training")
+    model2 = train_lgb(X_tr,
+                           Y_train
+                       )
+    print("Finish LightGBM training")
     # Make catboost_predictions
     cb_predictions = model1.predict(X_test)
     submission_cb = test_data.drop(columns=['SMILES'])
     submission_cb['LogP'] = cb_predictions
     submission_cb.to_csv("submission_cb.csv", index=False)
+    # Make lightgbm_predictions
+    lgb_predictions = model2.predict(X_test)
+    submission_lgb = test_data.drop(columns=['SMILES'])
+    submission_lgb['LogP'] = cb_predictions
+    submission_lgb.to_csv("submission_lgb.csv", index=False)
+    # CatBoost and LightGBM ensemble
+    submission_cb['LogP'] = (submission_cb['LogP'] + submission_lgb['LogP']) / 2
+    submission_cb.to_csv("submission_cb+lgb.csv", index=False)
     # Prepare additional data
     print("Prepare additional data")
     prepare_add_data(add_data_path, test_data)
@@ -100,7 +113,7 @@ def main():
     submission_dmpnn.to_csv("submission_dmpnn.csv", index=False)
     # Final predictions
     submission_dmpnn['LogP'] = (submission_dmpnn['LogP'] + submission_cb['LogP']) / 2
-    submission_dmpnn.to_csv("submission_cb+dmpnn.csv", index=False)
+    submission_dmpnn.to_csv("submission_cb+lgb+dmpnn.csv", index=False)
     print("--- %s total seconds elapsed ---" % (time.time() - start_time))
 
     

@@ -33,34 +33,34 @@ def train_catboost(X_train, y_train, X_val=None, y_val=None, plot=False, kwargs=
     return model
 
 
-def train_lgb(X_train, y_train, X_val=None, y_val=None, plot=False, kwargs={}):   
+def train_lgb(X_train, y_train, X_val=None, y_val=None, plot=False, kwargs={}):
 
     lgb_tr = lgb.Dataset(X_train, y_train)
     if X_val is not None:
         lgb_val = lgb.Dataset(X_val, y_val)
     else:
-        lgb_val=None
-
+        lgb_val = None
 
     params = {
-        'objective': 'regression', # or custom callable
+        'objective': 'regression',  # or custom callable
         'eta': 0.03,
-        #'lambda': 1e-3,
-    
+        # 'lambda': 1e-3,
+
         'seed': 911,
         'num_threads': 32,
-        'verbosity': 1,
-        'metrics': 'rmse'
+        'verbosity': 2,
+        'metrics': 'rmse',
+        'num_boost_round': 454
     }
     if kwargs:
         params.update(kwargs)
     model = lgb.train(
-        params, lgb_tr, num_boost_round=5000, # basic
-        valid_sets=[lgb_val], valid_names=['валидация'],
-        #feval=my_custom_metrics, # можно задать кастомные метрики для early_stopping
-        callbacks=[
-            lgb.early_stopping(stopping_rounds=100, min_delta=0.),
-            lgb.log_evaluation(period=10) # чтобы выводились результаты подсчета метрики для early_stopping
-       ]
+        params, lgb_tr  # basic
+        #valid_sets=[lgb_val], valid_names=['валидация'],
+        # feval=my_custom_metrics, # можно задать кастомные метрики для early_stopping
+        # callbacks=[
+        #     lgb.early_stopping(stopping_rounds=100, min_delta=0.),
+        #     lgb.log_evaluation(period=10)  # чтобы выводились результаты подсчета метрики для early_stopping
+        # ]
     )
     return model
