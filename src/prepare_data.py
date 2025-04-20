@@ -11,10 +11,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-from calculate_descriptors import calculate_descriptors
-from train_classic_ml import train_catboost
+from src.calculate_descriptors import calculate_descriptors
+from src.train_classic_ml import train_catboost
 
-def smile_mol(smis: str) -> chython.containers.molecule.MoleculeContainer:
+def smile_mol(smis: str):
     '''Parse smiles string.'''
     try:
         res = smiles(smis)

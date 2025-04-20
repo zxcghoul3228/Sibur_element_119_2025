@@ -4,9 +4,9 @@ import argparse
 import time
 import torch
 
-from prepare_data import prepare_train_test_data, prepare_add_data
-from train_classic_ml import train_catboost, train_lgb
-from train_dmpnn import pretrain_dmpnn, fit_predict_dmpnn
+from src.prepare_data import prepare_train_test_data, prepare_add_data
+from src.train_classic_ml import train_catboost, train_lgb
+from src.train_dmpnn import pretrain_dmpnn, fit_predict_dmpnn
 
 def main():
     start_time = time.time()

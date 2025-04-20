@@ -106,7 +106,7 @@ def calculate_descriptors(mols: list,
     df_train, cols2drop = calculate_mordred_descriptors(mols, cols2drop=cols2drop)
     train_rdkit_descriptors = calculate_rdkit_descriptors(mols)
     train_rdkit_properties = calculate_rdkit_properties(mols)
-    train_rdkit_descriptors_properties = pd.concat((train_rdkit_descriptors[rdkit_desc_cols], train_rdkit_properties), axis=1)
+
 
     # Delete duplicate columns
     mordred_cols = df_train.columns
@@ -114,7 +114,8 @@ def calculate_descriptors(mols: list,
     rdkit_desc_props_cols = np.concatenate((rdkit_desc_cols, train_rdkit_properties.columns))
     inters = set(mordred_cols).intersection(set(rdkit_desc_props_cols))
     rdkit_desc_props_cols = [col for col in rdkit_desc_props_cols if col not in mordred_cols]
-
+    
+    train_rdkit_descriptors_properties = pd.concat((train_rdkit_descriptors[rdkit_desc_cols], train_rdkit_properties), axis=1)
     train_mordred_rdkit_desc_prop = pd.concat((df_train, train_rdkit_descriptors_properties[rdkit_desc_props_cols]), axis=1)
 
     train_morgan_fps = calculate_morgan_fingerprints(mols)
