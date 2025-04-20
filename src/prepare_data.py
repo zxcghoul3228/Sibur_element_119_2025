@@ -123,7 +123,7 @@ def prepare_train_test_data(train_path: str, test_path: str):
 
 def prepare_add_data(add_data_path: str, test_data):
     '''Prepare file with additional data.'''
-    add_data = pd.read_csv("alogps_3_01_training_.csv")
+    add_data = pd.read_csv(add_data_path)
     add_data['logPow'] = add_data['logPow'].apply(pd.to_numeric, errors='coerce')
     add_data = add_data.rename(columns={'logPow': 'LogP'})[['SMILES', 'LogP']].dropna()
     add_data['ID'] = -1
