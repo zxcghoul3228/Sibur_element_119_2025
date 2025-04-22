@@ -13,6 +13,7 @@ conda activate Sibur
 pip install -r requirements.txt
 ```
 # Run training script
+WARNING!!! The learning process takes about an one hour. Final submission will be located in ```submission_cb+lgb+dmpnn.csv``` file. You can use prepared submission file ```final_submission.csv```.
 ```
 python main.py
 ```
