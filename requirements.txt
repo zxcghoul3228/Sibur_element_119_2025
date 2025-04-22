@@ -1,0 +1,13 @@
+pandas==1.5.3
+numpy==1.26.4
+torch==2.6.0+cu124
+rdkit==2024.09.6
+mordred==1.2.0
+Mold2_pywrapper==0.1.0
+chython==1.68
+lightgbm==4.5.0
+catboost==1.2.7
+lightning==2.5.1
+lightning-utilities==0.14.2
+pytorch-lightning==2.5.1
+chemprop==2.1.2
