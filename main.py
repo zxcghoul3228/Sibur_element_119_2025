@@ -92,7 +92,7 @@ def main():
     # Make lightgbm_predictions
     lgb_predictions = model2.predict(X_test)
     submission_lgb = test_data.drop(columns=['SMILES'])
-    submission_lgb['LogP'] = cb_predictions
+    submission_lgb['LogP'] = lgb_predictions
     submission_lgb.to_csv("submission_lgb.csv", index=False)
     # CatBoost and LightGBM ensemble
     submission_cb['LogP'] = (submission_cb['LogP'] + submission_lgb['LogP']) / 2
